@@ -74,7 +74,7 @@ int ren() {
         if (ren_res != 0) {
             perror("Error 2: renaming");
             return 2;
-        } else { printf("...Success!\n");}
+        } else { printf("File %d...Success!\n", i);}
         fp2 = strremove(fp, newname_finalized);
         strcpy(fp, fp2);
     }
