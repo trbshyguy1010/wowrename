@@ -113,7 +113,7 @@ void btn_submit_clicked() {
         gtk_label_set_text(GTK_LABEL(g_lbl_display), "Renamed Successfully\n");
         msgBox = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "All files have been renamed successfully!");
         result = gtk_dialog_run(GTK_DIALOG(msgBox));
-        gtk_widget_destroy(msgBox);
+        gtk_widget_destroy(msgBox); // the foni
         global_count = 0;
     } else {
         char errStr[300];
@@ -148,7 +148,7 @@ int main (int argc, char **argv)
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "mainWindow"));
     g_signal_connect(window, "destroy", gtk_main_quit, NULL);
-    gtk_window_set_title(GTK_WINDOW(window), "WowRename v0.1a");
+    gtk_window_set_title(GTK_WINDOW(window), "WowRename v0.2a");
 
     icon = gdk_pixbuf_new_from_file("wowrenameico.ico", NULL);
     gtk_window_set_icon(GTK_WINDOW(window), icon);
