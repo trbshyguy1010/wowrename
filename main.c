@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <dirent.h>
+#include <stddef.h>
+#include <sys/stat.h>
 
 // the actual foni
 char *strremove(char *str, const char *sub) {
@@ -16,6 +18,8 @@ char *strremove(char *str, const char *sub) {
     return str;
 }
 
+int global_count;
+
 GtkWidget *g_lbl_display;
 char* folder_path;
 
@@ -25,6 +29,7 @@ int ren() {
     char* fp2;
     DIR *dir;
     struct dirent *entry;
+    struct stat st;
     char oldname[1024], newname[1038]; // ...idk man
     char newname_finalized[1024];
     char oldname_finalized[1038];
@@ -38,8 +43,7 @@ int ren() {
     int i = 0;
     while ((entry = readdir(dir)) != NULL) {
         char ich[300];
-        char chasch[0];
-
+        char chasch[0];        
         if (strncmp(entry->d_name, ".", 1) == 0
             || strncmp(entry->d_name, "..", 2) == 0) {
                 continue;
@@ -70,25 +74,56 @@ int ren() {
         strcpy(newname, fp2);
 
         // renaming algorithm, wow very cool...
-        int ren_res = rename(oldname, newname);
-        if (ren_res != 0) {
-            perror("Error 2: renaming");
-            return 2;
-        } else { printf("File %d...Success!\n", i);}
-        fp2 = strremove(fp, newname_finalized);
-        strcpy(fp, fp2);
+        int ren_res;
+        
+        if (stat(oldname, &st) == -1) {
+            perror("Error 4 : stat function not working");
+            return 4;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            printf("One or more Directories have been Detected, Skipping \n");
+            fp2 = strremove(fp, newname_finalized);
+            strcpy(fp, fp2);
+            i--;
+            continue;
+        } else {
+            ren_res = rename(oldname, newname);
+            if (ren_res != 0) {
+                perror("Error 2: renaming");
+                return 2;
+            } else { 
+                printf("File %d...Success!\n", i);
+                global_count++;
+            }
+            fp2 = strremove(fp, newname_finalized);
+            strcpy(fp, fp2);
+        }
+        
     }
     closedir(dir);
     return 0;
 }
 
 void btn_submit_clicked() {
+    GtkWidget *msgBox;
+    gint result;
     printf("Clicked!\n");
     gtk_label_set_text(GTK_LABEL(g_lbl_display), "Renaming in Progress...\n");
     if (ren() == 0) {
         gtk_label_set_text(GTK_LABEL(g_lbl_display), "Renamed Successfully\n");
+        msgBox = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "All files have been renamed successfully!");
+        result = gtk_dialog_run(GTK_DIALOG(msgBox));
+        gtk_widget_destroy(msgBox);
+        global_count = 0;
     } else {
+        char errStr[300];
+        sprintf(errStr, "%d", global_count);
+        strcat(errStr, " Files have been renamed but there were errors in the renaming process, consult your local trbshyguy1010 for more info");
+        msgBox = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, errStr);
+        result = gtk_dialog_run(GTK_DIALOG(msgBox));
         gtk_label_set_text(GTK_LABEL(g_lbl_display), "There was an error during rename...\n");
+        gtk_widget_destroy(msgBox);
+        global_count = 0;
     }
 }
 
